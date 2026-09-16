@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+<meta name="theme-color" content="#050505">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+<title>Robô Interativo - Filosofia</title>
+
+<style>
+
+:root {
+    --eye-white: #f0faff;
+    --dark-bg: #050505;
+    --glow-soft: rgba(240,250,255,0.15);
+}
+
+* {
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--dark-bg);
+    overflow: hidden;
+    touch-action: manipulation;
+    overscroll-behavior: none;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100dvh;
+}
+
+/* =========================================
+   ORIENTAÇÃO
+========================================= */
+#orientation-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    color: white;
+    z-index: 99999;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-family: Arial,sans-serif;
+}
+#orientation-overlay div { font-size: 50px; }
+#orientation-overlay p { font-size: 18px; }
+
+@media (orientation:portrait) {
+    #orientation-overlay { display:flex; }
+}
+
+/* =========================================
+   ROSTO
+========================================= */
+.face-container {
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    width:100vw;
+    height:100vh;
+    animation:float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%,100% { transform:translateY(0); }
+    50% { transform:translateY(-12px); }
+}
+
+/* =========================================
+   OLHOS
+========================================= */
+.eyes-row {
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:clamp(60px,11vw,160px);
+    width:100vw;
+}
+
+.eye {
+    width:clamp(170px,22vw,330px);
+    height:clamp(150px,20vw,290px);
+    background:var(--eye-white);
+    border-radius:80px;
+    box-shadow: 0 0 30px var(--glow-soft), 0 0 70px rgba(240,250,255,0.07);
+    transition: all .4s cubic-bezier(.175, .885, .32, 1.275);
+}
+
+/* =========================================
+   EXPRESSÃO DORMINDO
+========================================= */
+.sleeping .eye {
+    width:clamp(140px,18vw,260px);
+    height:8px;
+    opacity:.2;
+    border-radius:4px;
+}
+
+/* =========================================
+   EXPRESSÃO FELIZ
+========================================= */
+.happy .eye {
+    height:clamp(70px,10vw,130px);
+    background:transparent;
+    border-top: clamp(18px,2.5vw,30px) solid var(--eye-white);
+    border-radius: 100px 100px 0 0;
+    box-shadow:none;
+    transform:translateY(25px);
+}
+
+/* =========================================
+   EXPRESSÃO PENSANDO
+========================================= */
+.thinking #eye-l { width:clamp(170px,22vw,330px); height:clamp(150px,20vw,290px); }
+.thinking #eye-r { width:clamp(170px,22vw,330px); height:clamp(100px,15vw,210px); }
+
+/* =========================================
+   EXPRESSÃO RINDO
+========================================= */
+.laughing .eye {
+    width:clamp(170px,22vw,330px);
+    height:clamp(40px,6vw,75px);
+    transform:skewX(10deg);
+}
+
+/* =========================================
+   PISCADA
+========================================= */
+.blink .eye { transform:scaleY(0)!important; }
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+@media (orientation:landscape) {
+    .eye { width:22vw; height:20vw; max-width:330px; max-height:290px; }
+}
+
+@media (max-height:500px) and (orientation:landscape) {
+    .eye { width:20vw; height:17vw; max-width:270px; max-height:225px; }
+    .eyes-row { gap:10vw; }
+}
+
+#status {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    z-index: 90000;
+    transform: translateX(-50%);
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(0,0,0,.62);
+    border: 1px solid rgba(255,255,255,.08);
+    color: rgba(255,255,255,.78);
+    font: 13px/1.2 Arial, sans-serif;
+    pointer-events: none;
+    backdrop-filter: blur(8px);
+}
+
+.speaking .eye {
+    transform: scaleY(.88);
+    box-shadow: 0 0 34px rgba(240,250,255,.2), 0 0 90px rgba(240,250,255,.08);
+}
+
+.listening .eye {
+    transform: scale(1.03);
+    box-shadow: 0 0 42px rgba(240,250,255,.24), 0 0 110px rgba(240,250,255,.1);
+}
+
+.attentive .eye { transform: scale(1.015); }
+.thinking .eye { opacity: .82; }
+
+.surprised .eye {
+    transform: scale(1.08);
+    border-radius: 55px;
+    box-shadow: 0 0 48px rgba(240,250,255,.25), 0 0 120px rgba(240,250,255,.12);
+}
+
+</style>
+</head>
+<body class="sleeping">
+
+<div id="status">Toque na tela para iniciar...</div>
+
+<div id="orientation-overlay">
+    <div>📱🔄</div>
+    <p>Gire o dispositivo para deitado.</p>
+</div>
+
+<div class="face-container" id="robot-face">
+    <div class="eyes-row">
+        <div id="eye-l" class="eye"></div>
+        <div id="eye-r" class="eye"></div>
+    </div>
+</div>
+
+<script>
+const body = document.body;
+const robotFace = document.getElementById("robot-face");
+const statusEl = document.getElementById("status");
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+// Variáveis de controle
+let audioCtx = null;
+let voices = [];
+let robotSpeaking = false;
+let listeningForUser = false;
+let processingUser = false;
+let conversationStarted = false;
+let sessionFinished = false;
+
+let currentStep = "name";
+let userName = "";
+let lastQuestion = ""; 
+
+const THINKING_TIME = 800;
+
+// ==========================================
+// TELA CHEIA (Pede a permissão mas não trava se sair)
+// ==========================================
+async function garantirTelaCheia() {
+    if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (err) {
+            console.log("Tela cheia bloqueada, prosseguindo...");
+        }
+    }
+}
+
+document.addEventListener("click", garantirTelaCheia);
+document.addEventListener("touchstart", garantirTelaCheia, {passive: true});
+
+// ==========================================
+// MOTOR DE RECONHECIMENTO DE VOZ
+// ==========================================
+if (recognition) {
+    recognition.lang = "pt-BR";
+    recognition.continuous = true; 
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+        if (!robotSpeaking && !processingUser) {
+            listeningForUser = true;
+            body.className = "listening";
+            setStatus("Pode falar, estou ouvindo...");
+        }
+    };
+
+    recognition.onresult = event => {
+        if (sessionFinished || processingUser || robotSpeaking) return;
+
+        const lastIndex = event.results.length - 1;
+        const result = event.results[lastIndex];
+        if (!result || !result.isFinal || !result[0]) return;
+
+        const texto = (result[0].transcript || "").trim();
+        if (!texto) return;
+
+        listeningForUser = false;
+        processingUser = true;
+        processarResposta(texto);
+    };
+
+    recognition.onerror = event => {};
+
+    recognition.onend = () => {
+        if (conversationStarted && !sessionFinished) {
+            try { recognition.start(); } catch(e) {}
+        }
+    };
+}
+
+function setStatus(text) {
+    if (statusEl) statusEl.textContent = text;
+}
+
+// ==========================================
+// SÍNTESE DE VOZ DO ROBÔ
+// ==========================================
+function inicializarAudioContext() {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === "suspended") audioCtx.resume().catch(() => {});
+    } catch (e) {}
+}
+
+function carregarVozes() {
+    voices = window.speechSynthesis ? window.speechSynthesis.getVoices() : [];
+}
+carregarVozes();
+if (window.speechSynthesis && "onvoiceschanged" in window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = carregarVozes;
+}
+
+function encontrarMelhorVoz() {
+    carregarVozes();
+    return voices.find(v => v.lang.toLowerCase().includes("pt-br") && (v.name.includes("Google") || v.name.includes("Luciana"))) 
+        || voices.find(v => v.lang.toLowerCase().includes("pt")) 
+        || null;
+}
+
+function falar(texto, expressao = "speaking") {
+    return new Promise(resolve => {
+        robotSpeaking = true; 
+        processingUser = false;
+        listeningForUser = false;
+        
+        body.className = expressao; 
+        setStatus("Robô falando...");
+        
+        if (!window.speechSynthesis) {
+            robotSpeaking = false;
+            resolve();
+            return;
+        }
+
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(texto);
+        msg.lang = "pt-BR";
+        msg.pitch = 0.8; 
+        msg.rate = 1.05;
+        
+        const voz = encontrarMelhorVoz();
+        if (voz) msg.voice = voz;
+
+        let finalizado = false;
+        const finalizar = () => {
+            if (finalizado) return;
+            finalizado = true;
+            robotSpeaking = false;
+            
+            if (!sessionFinished) {
+                listeningForUser = true;
+                body.className = "listening";
+                setStatus("Pode falar, estou ouvindo...");
+            }
+            resolve();
+        };
+
+        msg.onend = finalizar;
+        msg.onerror = finalizar;
+
+        const tempoEstimado = (texto.split(" ").length * 300) + 2000;
+        setTimeout(() => { if (!finalizado) finalizar(); }, tempoEstimado);
+        
+        window.speechSynthesis.speak(msg);
+    });
+}
+
+function esperar(ms) { return new Promise(r => setTimeout(r, ms)); }
+function normalizar(texto) { return texto.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+
+// ==========================================
+// CÉREBRO DO ROBÔ (AULA DE FILOSOFIA)
+// ==========================================
+function analisarIntencao(texto) {
+    const t = normalizar(texto);
+    
+    const foraDeContexto = ["futebol", "jogo", "videogame", "filme", "serie", "netflix", "politica", "piada", "engracado", "namorada", "sexo", "palavrao"];
+    const desvio = foraDeContexto.some(p => t.includes(p));
+
+    const temas = {
+        felicidade: ["feliz", "alegria", "bem estar", "paz", "tranquilidade"],
+        dinheiro: ["dinheiro", "rico", "comprar", "trabalho", "sucesso"],
+        relacionamentos: ["amor", "familia", "amigos", "pessoas", "ajudar", "conviver"],
+        liberdade: ["escolher", "livre", "fazer o que quiser"],
+        duvida: ["nao sei", "talvez", "depende"]
+    };
+
+    let temaDetectado = "geral";
+    for (let tema in temas) {
+        if (temas[tema].some(palavra => t.includes(palavra))) {
+            temaDetectado = tema;
+            break;
+        }
+    }
+
+    return { 
+        textoOriginal: texto, 
+        tema: temaDetectado, 
+        desvio: desvio,
+        curto: texto.split(" ").length <= 3
+    };
+}
+
+async function processarResposta(fala) {
+    body.className = "thinking"; 
+    setStatus("Processando...");
+    await esperar(THINKING_TIME);
+
+    const info = analisarIntencao(fala);
+    let resposta = "";
+    let expressao = "speaking";
+
+    // Impede o usuário de fugir do assunto
+    if (info.desvio) {
+        expressao = "surprised"; 
+        resposta = `Opa, percebi que você mudou de assunto. Eu sou um professor de filosofia, então precisamos focar na nossa aula. ${lastQuestion}`;
+        await falar(resposta, expressao);
+        return;
+    }
+
+    // Exige respostas mais elaboradas
+    if (info.curto && currentStep !== "name") {
+        expressao = "attentive";
+        resposta = `Pode me explicar um pouco melhor? Na filosofia, os porquês são mais importantes que os sins ou nãos. Desenvolva sua ideia.`;
+        await falar(resposta, expressao);
+        return;
+    }
+
+    if (currentStep === "name") {
+        let limpo = normalizar(fala).replace(/(meu nome e|me chamo|eu sou|sou)/g, "").trim();
+        userName = limpo.split(" ")[0];
+        userName = userName.charAt(0).toUpperCase() + userName.slice(1);
+        
+        if (userName.length < 2) {
+            expressao = "surprised";
+            resposta = "Desculpe, não consegui entender bem o seu nome. Como você se chama?";
+        } else {
+            expressao = "happy"; 
+            lastQuestion = "Para iniciarmos nossa aula: na sua visão, o que faz a vida realmente valer a pena?";
+            resposta = `Muito prazer, ${userName}! Eu sou o seu professor virtual hoje. ${lastQuestion}`;
+            currentStep = "vida";
+        }
+    } 
+    else if (currentStep === "vida") {
+        expressao = "attentive";
+        // Transição direta para a aula, conectando a resposta do usuário
+        let gancho = "";
+        if (info.tema === "felicidade") gancho = "Você mencionou a felicidade. ";
+        else if (info.tema === "relacionamentos") gancho = "Você falou sobre nossas conexões com outras pessoas. ";
+        else gancho = "É uma perspectiva muito interessante. ";
+
+        lastQuestion = "Hoje em dia, com celulares e tanta distração, você acha que as pessoas costumam pensar sobre o que fazem, ou só vivem no piloto automático?";
+        resposta = `${gancho} Mas sabe, independentemente do que buscamos, a filosofia nos ensina algo fundamental sobre como viver. Vamos à nossa aula de hoje: O filósofo grego Sócrates dizia que 'uma vida sem reflexão não vale a pena ser vivida'. Ele acreditava que aceitar as coisas sem questionar é um desperdício da nossa existência. Pensando nisso... ${lastQuestion}`;
+        
+        currentStep = "aula_reflexao";
+    } 
+    else if (currentStep === "aula_reflexao") {
+        expressao = "thinking"; 
+        lastQuestion = "Se você tivesse que ensinar o que aprendeu hoje sobre sair do 'piloto automático' para um amigo, que conselho daria a ele em uma frase?";
+        resposta = `Entendo perfeitamente seu ponto de vista. É muito fácil sermos levados pela correnteza do dia a dia. Para encerrarmos nosso encontro: ${lastQuestion}`;
+        currentStep = "final";
+    } 
+    else if (currentStep === "final") {
+        expressao = "happy";
+        resposta = `Belo conselho! A filosofia é exatamente isso: questionar o óbvio e não aceitar viver de forma robótica. Excelente aula, ${userName}! Vejo que você tem um ótimo pensamento crítico. Foi ótimo conversar com você. Até a próxima!`;
+        currentStep = "encerramento";
+    }
+
+    await falar(resposta, expressao);
+
+    if (currentStep === "encerramento") {
+        sessionFinished = true;
+        body.className = "sleeping";
+        setStatus("Sessão finalizada. Aula concluída.");
+        try { recognition.abort(); } catch(e){} 
+    }
+}
+
+// ==========================================
+// START PRINCIPAL
+// ==========================================
+let startBusy = false;
+robotFace.addEventListener("click", async () => {
+    if (startBusy) return;
+    startBusy = true;
+
+    try {
+        inicializarAudioContext();
+        await garantirTelaCheia();
+
+        if (conversationStarted) return; 
+
+        if (!recognition) {
+            setStatus("Navegador não suporta reconhecimento de voz.");
+            return;
+        }
+
+        conversationStarted = true;
+        sessionFinished = false;
+        currentStep = "name";
+        setStatus("Conversa iniciada.");
+        
+        try { recognition.start(); } catch(e) {}
+        
+        await falar("Olá! Eu sou o robô assistente de filosofia. Estou aqui para guiar nossa reflexão e te dar uma aula. Para começar, qual é o seu nome?", "happy");
+        
+    } finally {
+        setTimeout(() => { startBusy = false; }, 700);
+    }
+});
+
+// PISCAR OS OLHOS CONTINUAMENTE
+setInterval(() => {
+    if (!conversationStarted || sessionFinished || body.classList.contains("sleeping")) return;
+    const previousClass = body.className;
+    body.classList.add("blink");
+    setTimeout(() => {
+        body.className = previousClass; 
+    }, 150);
+}, 4500);
+
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+</script>
+</body>
+</html>
